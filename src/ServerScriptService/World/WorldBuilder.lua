@@ -252,6 +252,7 @@ function WorldBuilder.ensurePlayground(baseplate, homeSpawn)
   merryBase.Material = Enum.Material.SmoothPlastic
   merryBase.BrickColor = BrickColor.new("Bright red")
   applyTag(merryBase, Constants.TAGS.QuestTarget)
+  merryModel.PrimaryPart = merryBase
 
   local spinPrompt = merryBase:FindFirstChild("SpinPrompt")
   if spinPrompt and not spinPrompt:IsA("ProximityPrompt") then
@@ -275,6 +276,12 @@ function WorldBuilder.ensurePlayground(baseplate, homeSpawn)
   merrySeat.CFrame = CFrame.new(baseCenter + Vector3.new(0, 1.5, 0))
   merrySeat.BrickColor = BrickColor.new("Bright yellow")
   applyTag(merrySeat, Constants.TAGS.QuestMount)
+
+  local spinMarker = findOrCreatePart(merryModel, "SpinMarker", "Part")
+  applyPhysics(spinMarker, true, false, false)
+  spinMarker.Size = Vector3.new(2, 1, 2)
+  spinMarker.Position = baseCenter + Vector3.new(8, 1.5, 0)
+  spinMarker.BrickColor = BrickColor.new("Bright blue")
 
   local weld = merrySeat:FindFirstChildOfClass("WeldConstraint")
   if not weld then

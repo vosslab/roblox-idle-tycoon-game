@@ -7,6 +7,7 @@ local shared = ReplicatedStorage:WaitForChild("Shared")
 local Constants = require(shared:WaitForChild("Constants"))
 local QuestDefinitions = require(script.Parent.QuestDefinitions)
 local PlayerStatsService = require(script.Parent.Parent.Economy.PlayerStatsService)
+local MerryGoRound = require(script.Parent.Parent.World.Interactables.MerryGoRound)
 
 local QuestService = {}
 
@@ -24,17 +25,8 @@ local SPIN_THRESHOLD = 0.8
 local remotes = {}
 local playerState = {}
 local lastPushTime = {}
-local merryPushTime = {}
-
-local merryAngularSpeed = 0
-
-local cachedObjects = nil
 
 local function getPlaygroundObjects()
-  if cachedObjects then
-    return cachedObjects
-  end
-
   local playground = workspace:FindFirstChild(Constants.NAMES.Playground)
   if not playground then
     warn("[QuestService] Playground not found.")
@@ -45,15 +37,7 @@ local function getPlaygroundObjects()
     swingArea = playground:FindFirstChild(Constants.NAMES.SwingArea),
     swingSeat = playground:FindFirstChild(Constants.NAMES.SwingSeat, true),
     pushButton = playground:FindFirstChild(Constants.NAMES.PushButton),
-    merryModel = playground:FindFirstChild(Constants.NAMES.MerryGoRound),
   }
-
-  if objects.merryModel then
-    objects.merryBase = objects.merryModel:FindFirstChild(Constants.NAMES.MerryGoRoundBase)
-    objects.merrySeat = objects.merryModel:FindFirstChild(Constants.NAMES.MerryGoRoundSeat)
-  end
-
-  cachedObjects = objects
   return objects
 end
 
@@ -208,11 +192,6 @@ local function handleSwingPush(player, target)
 end
 
 local function handleSpinPush(player, target)
-  local objects = getPlaygroundObjects()
-  if not objects then
-    return
-  end
-
   if not target then
     return
   end
@@ -223,46 +202,28 @@ local function handleSpinPush(player, target)
   if not withinDistance(player, target, MAX_INTERACT_DISTANCE) then
     return
   end
-  if not isSeatedOn(player, objects.merrySeat) then
-    return
-  end
 
-  local now = os.clock()
-  local last = merryPushTime[player]
-  if last and (now - last) < PUSH_DEBOUNCE then
-    return
+  if MerryGoRound.Push(player) then
+    remotes[Constants.REMOTES.ShowToast]:FireClient(player, "Push")
   end
-  merryPushTime[player] = now
-
-  merryAngularSpeed = math.min(merryAngularSpeed + 0.8, 8)
-  remotes[Constants.REMOTES.ShowToast]:FireClient(player, "Push")
 end
 
 local function onHeartbeat(dt)
-  local objects = getPlaygroundObjects()
-  if not objects or not objects.merrySeat or not objects.merryModel then
+  MerryGoRound.Update(dt)
+
+  local seat = MerryGoRound.GetSeat()
+  if not seat then
     return
   end
 
-  if math.abs(merryAngularSpeed) > 0 then
-    local pivot = objects.merryModel:GetPivot()
-    local deltaAngle = merryAngularSpeed * dt
-    objects.merryModel:PivotTo(pivot * CFrame.Angles(0, deltaAngle, 0))
-
-    merryAngularSpeed = merryAngularSpeed * 0.98
-    if math.abs(merryAngularSpeed) < 0.05 then
-      merryAngularSpeed = 0
-    end
-  end
-
-  local occupant = objects.merrySeat.Occupant
+  local occupant = seat.Occupant
   local rider = nil
   if occupant and occupant.Parent then
     rider = Players:GetPlayerFromCharacter(occupant.Parent)
   end
 
   if rider and playerState[rider] then
-    if isSeatedOn(rider, objects.merrySeat) and math.abs(merryAngularSpeed) > SPIN_THRESHOLD then
+    if MerryGoRound.IsRiding(rider) and math.abs(MerryGoRound.GetAngularSpeed()) > SPIN_THRESHOLD then
       local state = playerState[rider]
       state.spinTime += dt
 
@@ -281,6 +242,8 @@ end
 
 function QuestService.Init(remoteTable)
   remotes = remoteTable
+  local playground = workspace:FindFirstChild(Constants.NAMES.Playground)
+  MerryGoRound.Init(playground, Constants, remotes)
 
   remotes[Constants.REMOTES.RequestInteract].OnServerEvent:Connect(function(player, target, action)
     if action == "SwingPush" and typeof(target) == "Instance" then
@@ -329,7 +292,6 @@ end
 function QuestService.RemovePlayer(player)
   playerState[player] = nil
   lastPushTime[player] = nil
-  merryPushTime[player] = nil
 end
 
 return QuestService

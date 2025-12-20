@@ -12,3 +12,5 @@
 - Add `docs/FILE_STRUCTURE.md` with the repo layout and generated asset notes.
 - Add a Playground bootstrap failsafe to rebuild world geometry if the main entrypoint fails.
 - Add a merry-go-round spin prompt and server-driven spin control via E push.
+- Add a visible spin marker and rotate the merry-go-round around the base center for clearer motion debugging.
+- Refactor merry-go-round control into `World/Interactables/MerryGoRound.lua` to keep quest logic focused on progression.
