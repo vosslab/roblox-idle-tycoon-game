@@ -1,11 +1,14 @@
 local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local WorldBuilder = require(script.Parent.World.WorldBuilder)
 local SaveService = require(script.Parent.Persistence.SaveService)
 local PlayerStatsService = require(script.Parent.Economy.PlayerStatsService)
 local TycoonService = require(script.Parent.Economy.TycoonService)
 local QuestService = require(script.Parent.Quests.QuestService)
-local Constants = require(game:GetService("ReplicatedStorage").Shared.Constants)
+
+local shared = ReplicatedStorage:WaitForChild("Shared")
+local Constants = require(shared:WaitForChild("Constants"))
 
 local baseplate, homeSpawn = WorldBuilder.ensureBaseplateAndSpawn()
 WorldBuilder.ensurePlayground(baseplate, homeSpawn)

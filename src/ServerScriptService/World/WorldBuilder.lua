@@ -1,7 +1,8 @@
 local CollectionService = game:GetService("CollectionService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
-local Constants = require(ReplicatedStorage.Shared.Constants)
+local shared = ReplicatedStorage:WaitForChild("Shared")
+local Constants = require(shared:WaitForChild("Constants"))
 
 local WorldBuilder = {}
 
@@ -251,6 +252,22 @@ function WorldBuilder.ensurePlayground(baseplate, homeSpawn)
   merryBase.Material = Enum.Material.SmoothPlastic
   merryBase.BrickColor = BrickColor.new("Bright red")
   applyTag(merryBase, Constants.TAGS.QuestTarget)
+
+  local spinPrompt = merryBase:FindFirstChild("SpinPrompt")
+  if spinPrompt and not spinPrompt:IsA("ProximityPrompt") then
+    spinPrompt.Name = "SpinPrompt_Unexpected"
+    spinPrompt = nil
+  end
+  if not spinPrompt then
+    spinPrompt = Instance.new("ProximityPrompt")
+    spinPrompt.Name = "SpinPrompt"
+    spinPrompt.Parent = merryBase
+  end
+  spinPrompt.ActionText = "Push"
+  spinPrompt.ObjectText = "Merry-go-round"
+  spinPrompt.KeyboardKeyCode = Enum.KeyCode.E
+  spinPrompt.HoldDuration = 0
+  spinPrompt.MaxActivationDistance = 10
 
   local merrySeat = findOrCreatePart(merryModel, Constants.NAMES.MerryGoRoundSeat, "Seat")
   applyPhysics(merrySeat, false, true, false)

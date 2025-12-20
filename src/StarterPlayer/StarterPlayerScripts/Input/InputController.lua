@@ -1,8 +1,8 @@
 local CollectionService = game:GetService("CollectionService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local UserInputService = game:GetService("UserInputService")
 
-local Constants = require(ReplicatedStorage.Shared.Constants)
+local shared = ReplicatedStorage:WaitForChild("Shared")
+local Constants = require(shared:WaitForChild("Constants"))
 
 local InputController = {}
 
@@ -15,6 +15,11 @@ local function connectPrompt(prompt)
 
   prompt.Triggered:Connect(function()
     local target = prompt.Parent
+    if prompt.Name == "SpinPrompt" then
+      remotes.RequestInteract:FireServer(target, "SpinMerryGoRound")
+      return
+    end
+
     if target and CollectionService:HasTag(target, Constants.TAGS.QuestButton) then
       remotes.RequestInteract:FireServer(target, "SwingPush")
     end
@@ -24,7 +29,6 @@ end
 function InputController.Init(remoteTable)
   remotes = {
     RequestInteract = remoteTable.RequestInteract,
-    RequestTurn = remoteTable.RequestTurn,
   }
 
   for _, instance in ipairs(CollectionService:GetTagged(Constants.TAGS.QuestButton)) do
@@ -34,21 +38,18 @@ function InputController.Init(remoteTable)
     end
   end
 
+  for _, prompt in ipairs(workspace:GetDescendants()) do
+    if prompt:IsA("ProximityPrompt") and prompt.Name == "SpinPrompt" then
+      connectPrompt(prompt)
+    end
+  end
+
   workspace.DescendantAdded:Connect(function(child)
     if child:IsA("ProximityPrompt") and child.Parent and CollectionService:HasTag(child.Parent, Constants.TAGS.QuestButton) then
       connectPrompt(child)
     end
-  end)
-
-  UserInputService.InputBegan:Connect(function(input, gameProcessed)
-    if gameProcessed then
-      return
-    end
-
-    if input.KeyCode == Enum.KeyCode.A then
-      remotes.RequestTurn:FireServer(-1)
-    elseif input.KeyCode == Enum.KeyCode.D then
-      remotes.RequestTurn:FireServer(1)
+    if child:IsA("ProximityPrompt") and child.Name == "SpinPrompt" then
+      connectPrompt(child)
     end
   end)
 end

@@ -3,7 +3,8 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local CollectionService = game:GetService("CollectionService")
 local RunService = game:GetService("RunService")
 
-local Constants = require(ReplicatedStorage.Shared.Constants)
+local shared = ReplicatedStorage:WaitForChild("Shared")
+local Constants = require(shared:WaitForChild("Constants"))
 local QuestDefinitions = require(script.Parent.QuestDefinitions)
 local PlayerStatsService = require(script.Parent.Parent.Economy.PlayerStatsService)
 
@@ -18,20 +19,14 @@ local SPIN_TIME_GOAL = 20
 local PUSH_DEBOUNCE = 0.35
 local MAX_INTERACT_DISTANCE = 10
 
-local TURN_ACCEL = 1.4
-local MAX_TURN_SPEED = 6
-local TURN_FRICTION = 1.5
 local SPIN_THRESHOLD = 0.8
 
 local remotes = {}
 local playerState = {}
 local lastPushTime = {}
+local merryPushTime = {}
 
-local turnSpeedByPlayer = {}
-local currentRider = nil
-local currentAngularSpeed = 0
-local currentAngle = 0
-local basePivot = nil
+local merryAngularSpeed = 0
 
 local cachedObjects = nil
 
@@ -212,33 +207,35 @@ local function handleSwingPush(player, target)
   end
 end
 
-local function handleTurn(player, direction)
+local function handleSpinPush(player, target)
   local objects = getPlaygroundObjects()
   if not objects then
     return
   end
 
-  local state = playerState[player]
-  if not state or state.stage ~= 2 then
+  if not target then
     return
   end
 
-  if direction ~= -1 and direction ~= 1 then
+  if not hasTag(target, Constants.TAGS.QuestTarget) and target.Name ~= Constants.NAMES.MerryGoRoundBase then
     return
   end
-
+  if not withinDistance(player, target, MAX_INTERACT_DISTANCE) then
+    return
+  end
   if not isSeatedOn(player, objects.merrySeat) then
     return
   end
 
-  if not withinDistance(player, objects.merryBase, MAX_INTERACT_DISTANCE) then
+  local now = os.clock()
+  local last = merryPushTime[player]
+  if last and (now - last) < PUSH_DEBOUNCE then
     return
   end
+  merryPushTime[player] = now
 
-  local speed = turnSpeedByPlayer[player] or 0
-  speed += direction * TURN_ACCEL
-  speed = math.clamp(speed, -MAX_TURN_SPEED, MAX_TURN_SPEED)
-  turnSpeedByPlayer[player] = speed
+  merryAngularSpeed = math.min(merryAngularSpeed + 0.8, 8)
+  remotes[Constants.REMOTES.ShowToast]:FireClient(player, "Push")
 end
 
 local function onHeartbeat(dt)
@@ -247,8 +244,15 @@ local function onHeartbeat(dt)
     return
   end
 
-  if not basePivot then
-    basePivot = objects.merryModel:GetPivot()
+  if math.abs(merryAngularSpeed) > 0 then
+    local pivot = objects.merryModel:GetPivot()
+    local deltaAngle = merryAngularSpeed * dt
+    objects.merryModel:PivotTo(pivot * CFrame.Angles(0, deltaAngle, 0))
+
+    merryAngularSpeed = merryAngularSpeed * 0.98
+    if math.abs(merryAngularSpeed) < 0.05 then
+      merryAngularSpeed = 0
+    end
   end
 
   local occupant = objects.merrySeat.Occupant
@@ -257,37 +261,19 @@ local function onHeartbeat(dt)
     rider = Players:GetPlayerFromCharacter(occupant.Parent)
   end
 
-  if rider ~= currentRider then
-    currentRider = rider
-    currentAngularSpeed = turnSpeedByPlayer[rider] or 0
-  end
-
-  if math.abs(currentAngularSpeed) > 0 then
-    currentAngle += currentAngularSpeed * dt
-    objects.merryModel:PivotTo(basePivot * CFrame.Angles(0, currentAngle, 0))
-
-    local decay = math.max(0, 1 - (TURN_FRICTION * dt))
-    currentAngularSpeed = currentAngularSpeed * decay
-    if math.abs(currentAngularSpeed) < 0.05 then
-      currentAngularSpeed = 0
-    end
-  end
-
-  if currentRider and playerState[currentRider] then
-    turnSpeedByPlayer[currentRider] = currentAngularSpeed
-
-    if isSeatedOn(currentRider, objects.merrySeat) and math.abs(currentAngularSpeed) > SPIN_THRESHOLD then
-      local state = playerState[currentRider]
+  if rider and playerState[rider] then
+    if isSeatedOn(rider, objects.merrySeat) and math.abs(merryAngularSpeed) > SPIN_THRESHOLD then
+      local state = playerState[rider]
       state.spinTime += dt
 
       local wholeSeconds = math.floor(state.spinTime)
       if wholeSeconds ~= state.lastSpinSecond then
         state.lastSpinSecond = wholeSeconds
-        sendQuestState(currentRider)
+        sendQuestState(rider)
       end
 
       if state.spinTime >= SPIN_TIME_GOAL then
-        completeQuest(currentRider)
+        completeQuest(rider)
       end
     end
   end
@@ -299,11 +285,9 @@ function QuestService.Init(remoteTable)
   remotes[Constants.REMOTES.RequestInteract].OnServerEvent:Connect(function(player, target, action)
     if action == "SwingPush" and typeof(target) == "Instance" then
       handleSwingPush(player, target)
+    elseif action == "SpinMerryGoRound" and typeof(target) == "Instance" then
+      handleSpinPush(player, target)
     end
-  end)
-
-  remotes[Constants.REMOTES.RequestTurn].OnServerEvent:Connect(function(player, direction)
-    handleTurn(player, direction)
   end)
 
   RunService.Heartbeat:Connect(onHeartbeat)
@@ -345,7 +329,7 @@ end
 function QuestService.RemovePlayer(player)
   playerState[player] = nil
   lastPushTime[player] = nil
-  turnSpeedByPlayer[player] = nil
+  merryPushTime[player] = nil
 end
 
 return QuestService

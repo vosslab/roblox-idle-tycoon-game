@@ -1,7 +1,8 @@
 local CollectionService = game:GetService("CollectionService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
-local Constants = require(ReplicatedStorage.Shared.Constants)
+local shared = ReplicatedStorage:WaitForChild("Shared")
+local Constants = require(shared:WaitForChild("Constants"))
 
 local ArrowController = {}
 
