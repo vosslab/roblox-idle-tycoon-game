@@ -1,0 +1,42 @@
+local Constants = {
+  REMOTES = {
+    PlayerStatsUpdated = "PlayerStatsUpdated",
+    RequestInteract = "RequestInteract",
+    RequestTurn = "RequestTurn",
+    QuestStateUpdated = "QuestStateUpdated",
+    ShowToast = "ShowToast",
+    ShowAgeSplash = "ShowAgeSplash",
+  },
+  TAGS = {
+    QuestTarget = "QuestTarget",
+    QuestMount = "QuestMount",
+    QuestButton = "QuestButton",
+  },
+  NAMES = {
+    Baseplate = "Baseplate",
+    HomeSpawn = "HomeSpawn",
+    Playground = "Playground",
+    PlaygroundSand = "PlaygroundSand",
+    SwingArea = "SwingArea",
+    SwingSeat = "SwingSeat",
+    SwingSet = "SwingSet",
+    SwingTopBar = "SwingTopBar",
+    PushButton = "PushButton",
+    MerryGoRound = "MerryGoRound",
+    MerryGoRoundBase = "MerryGoRoundBase",
+    MerryGoRoundSeat = "MerryGoRoundSeat",
+    MerryGoRoundBasePieces = "BasePieces",
+    Slide = "Slide",
+    SlidePlatform = "SlidePlatform",
+    SlideRamp = "SlideRamp",
+    SlideSupport = "SlideSupport",
+    Path = "Path",
+    Remotes = "Remotes",
+    HouseModel = "HouseModel",
+    HouseBase = "Base",
+    CoinSpawners = "CoinSpawners",
+    UpgradePad = "UpgradePad",
+  },
+}
+
+return Constants
