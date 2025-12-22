@@ -63,8 +63,8 @@ function SwingBuilder.Build(playground, constants)
   local ropeLength = 6
 
   local toSpawn = context.homeSpawn.Position - swingSetCenter
-  local forward =
-    (toSpawn.Magnitude > 0.1 and Vector3.new(toSpawn.X, 0, toSpawn.Z).Unit) or Vector3.new(0, 0, -1)
+  local forward = (toSpawn.Magnitude > 0.1 and Vector3.new(toSpawn.X, 0, toSpawn.Z).Unit)
+    or Vector3.new(0, 0, -1)
   local baseCFrame = CFrame.lookAt(swingSetCenter, swingSetCenter + forward)
 
   leftPost.Size = Vector3.new(1, beamHeight, 1)

@@ -12,8 +12,12 @@ function PlaygroundBuilder.Build(playground, constants)
     return
   end
 
-  local sandSizeX = 260
-  local sandSizeZ = 260
+  local layout = context.layout
+  local playgroundZone = layout and layout.zones and layout.zones.playground or nil
+  local sandSizeX = playgroundZone and playgroundZone.width or 156
+  local sandSizeZ = playgroundZone and playgroundZone.length or 156
+  local fenceHeight = 6
+  local openingWidth = 16
 
   local sandPatch = BuilderUtil.findOrCreatePart(playground, constants.NAMES.PlaygroundSand, "Part")
   BuilderUtil.applyPhysics(sandPatch, true, true, false)
@@ -29,14 +33,13 @@ function PlaygroundBuilder.Build(playground, constants)
   sandPatch.BrickColor = BrickColor.new("Sand yellow")
 
   local fenceModel = BuilderUtil.findOrCreateModel(workspace, "Fence")
-  local fenceHeight = 12
   local fenceThickness = 1.5
   local fenceY = context.groundY + context.sandThickness + (fenceHeight / 2)
   local halfX = sandSizeX / 2
   local halfZ = sandSizeZ / 2
-  local openingWidth = 16
 
-  local delta = context.homeSpawn.Position - sandPatch.Position
+  local spawnCenter = context.layout and context.layout.spawnCenter or context.homeSpawn.Position
+  local delta = spawnCenter - sandPatch.Position
   local gateSide = "West"
   if math.abs(delta.X) > math.abs(delta.Z) then
     gateSide = delta.X > 0 and "East" or "West"
@@ -92,19 +95,72 @@ function PlaygroundBuilder.Build(playground, constants)
   buildVertical("FenceEastA", "FenceEastB", eastX, gateSide == "East")
   buildVertical("FenceWestA", "FenceWestB", westX, gateSide == "West")
 
-  local spawnOffset = 6
-  local spawnY = context.groundY + 3
-  local spawnPos = context.homeSpawn.Position
-  if gateSide == "North" then
-    spawnPos = Vector3.new(sandPatch.Position.X, spawnY, northZ + spawnOffset)
-  elseif gateSide == "South" then
-    spawnPos = Vector3.new(sandPatch.Position.X, spawnY, southZ - spawnOffset)
-  elseif gateSide == "East" then
-    spawnPos = Vector3.new(eastX + spawnOffset, spawnY, sandPatch.Position.Z)
-  else
-    spawnPos = Vector3.new(westX - spawnOffset, spawnY, sandPatch.Position.Z)
+  local spawnAreaCenter = spawnCenter
+
+  local spawnArea = BuilderUtil.findOrCreateModel(workspace, constants.NAMES.SpawnArea)
+  local spawnPlatform =
+    BuilderUtil.findOrCreatePart(spawnArea, constants.NAMES.SpawnPlatform, "Part")
+  local spawnZone = layout and layout.zones and layout.zones.spawn or nil
+  local spawnPlatformSize = Vector3.new(48, 1, 32)
+  if spawnZone then
+    spawnPlatformSize = Vector3.new(spawnZone.width, 1, spawnZone.length)
   end
-  context.homeSpawn.Position = spawnPos
+  BuilderUtil.applyPhysics(spawnPlatform, true, true, false)
+  spawnPlatform.Size = spawnPlatformSize
+  spawnPlatform.Position = Vector3.new(
+    spawnAreaCenter.X,
+    context.groundY + context.sandThickness + (spawnPlatformSize.Y / 2),
+    spawnAreaCenter.Z
+  )
+  spawnPlatform.Material = Enum.Material.SmoothPlastic
+  spawnPlatform.BrickColor = BrickColor.new("Light stone grey")
+
+  local spawnPadSize = Vector3.new(6, 1, 6)
+  local padLift = 0.05
+  local spawnPadY = spawnPlatform.Position.Y
+    + (spawnPlatformSize.Y / 2)
+    + (spawnPadSize.Y / 2)
+    + padLift
+  local gridX = 3
+  local gridZ = 2
+  local spacing = 8
+  local startX = -(spacing * (gridX - 1) / 2)
+  local startZ = -(spacing * (gridZ - 1) / 2)
+  local maxPads = gridX * gridZ
+  local spawnIndex = 1
+  for x = 0, gridX - 1 do
+    for z = 0, gridZ - 1 do
+      local spawn = nil
+      if spawnIndex == 1 then
+        spawn = context.homeSpawn
+      else
+        spawn = BuilderUtil.findOrCreatePart(
+          spawnArea,
+          constants.NAMES.SpawnPad .. spawnIndex,
+          "SpawnLocation"
+        )
+      end
+      BuilderUtil.applyPhysics(spawn, true, true, false)
+      spawn.Size = spawnPadSize
+      spawn.Position = Vector3.new(
+        spawnAreaCenter.X + startX + (x * spacing),
+        spawnPadY,
+        spawnAreaCenter.Z + startZ + (z * spacing)
+      )
+      spawn.Material = Enum.Material.SmoothPlastic
+      spawn.BrickColor = BrickColor.new("Light blue")
+      spawnIndex += 1
+    end
+  end
+
+  for _, child in ipairs(spawnArea:GetChildren()) do
+    if child:IsA("SpawnLocation") then
+      local index = tonumber(child.Name:match("^" .. constants.NAMES.SpawnPad .. "(%d+)$"))
+      if index == 1 or (index and index > maxPads) then
+        child:Destroy()
+      end
+    end
+  end
 end
 
 return PlaygroundBuilder

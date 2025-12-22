@@ -19,6 +19,40 @@ local function setPromptText(prompt, isOpen)
   prompt.ObjectText = "Door"
 end
 
+local function getPrompt(door)
+  local prompt = door:FindFirstChild("DoorPrompt")
+  if prompt and prompt:IsA("ProximityPrompt") then
+    return prompt
+  end
+  return nil
+end
+
+local function getDoorGroup(door)
+  local value = door:GetAttribute("DoorGroup")
+  if type(value) == "string" and value ~= "" then
+    return value
+  end
+  return nil
+end
+
+local function tweenDoor(door, target, openState)
+  doorBusy[door] = true
+
+  local tween =
+    TweenService:Create(door, TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+      CFrame = target,
+    })
+  tween:Play()
+  tween.Completed:Once(function()
+    door:SetAttribute("IsOpen", openState)
+    local prompt = getPrompt(door)
+    if prompt then
+      setPromptText(prompt, openState)
+    end
+    doorBusy[door] = nil
+  end)
+end
+
 local function setupDoor(door)
   if not door or not door:IsA("BasePart") then
     return
@@ -38,8 +72,9 @@ local function setupDoor(door)
   prompt.ActionText = "Open"
   prompt.ObjectText = "Door"
   prompt.KeyboardKeyCode = Enum.KeyCode.E
-  prompt.HoldDuration = 0.5
+  prompt.HoldDuration = 0
   prompt.MaxActivationDistance = 10
+  prompt.RequiresLineOfSight = false
 
   if door:GetAttribute("IsOpen") == nil then
     door:SetAttribute("IsOpen", false)
@@ -50,27 +85,32 @@ local function setupDoor(door)
   end
 
   prompt.Triggered:Connect(function()
-    if doorBusy[door] then
-      return
-    end
-    doorBusy[door] = true
-
     local isOpen = door:GetAttribute("IsOpen") == true
-    local target = isOpen and getDoorCFrame(door, "ClosedCFrame") or getDoorCFrame(door, "OpenCFrame")
-    if not target then
-      doorBusy[door] = nil
-      return
+    local desiredOpen = not isOpen
+    local group = getDoorGroup(door)
+    local targets = { door }
+
+    if group and constants and constants.TAGS and constants.TAGS.SchoolDoor then
+      for _, otherDoor in ipairs(CollectionService:GetTagged(constants.TAGS.SchoolDoor)) do
+        if otherDoor ~= door and getDoorGroup(otherDoor) == group then
+          table.insert(targets, otherDoor)
+        end
+      end
     end
 
-    local tween = TweenService:Create(door, TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-      CFrame = target,
-    })
-    tween:Play()
-    tween.Completed:Once(function()
-      door:SetAttribute("IsOpen", not isOpen)
-      setPromptText(prompt, not isOpen)
-      doorBusy[door] = nil
-    end)
+    for _, targetDoor in ipairs(targets) do
+      if doorBusy[targetDoor] then
+        return
+      end
+    end
+
+    for _, targetDoor in ipairs(targets) do
+      local target = desiredOpen and getDoorCFrame(targetDoor, "OpenCFrame")
+        or getDoorCFrame(targetDoor, "ClosedCFrame")
+      if target then
+        tweenDoor(targetDoor, target, desiredOpen)
+      end
+    end
   end)
 end
 

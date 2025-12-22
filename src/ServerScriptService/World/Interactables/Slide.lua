@@ -13,9 +13,9 @@ local lastImpulseTime = {}
 local touchingCounts = {}
 
 local IMPULSE_INTERVAL = 0.1
-local SPEED_BONUS = 6
-local PUSH_FORCE = 55
-local MAX_SPEED = 110
+local SPEED_BONUS = 0
+local PUSH_FORCE = 30
+local MAX_SPEED = 55
 
 local DEBUG = false
 
@@ -108,7 +108,9 @@ local function beginSlide(character, humanoid)
 
   activeSliders[character] = true
   savedWalkSpeed[character] = humanoid.WalkSpeed
-  humanoid.WalkSpeed = humanoid.WalkSpeed + SPEED_BONUS
+  humanoid.WalkSpeed = SPEED_BONUS
+  humanoid.Sit = true
+  humanoid:ChangeState(Enum.HumanoidStateType.Seated)
   lastImpulseTime[character] = 0
 
   dprint("Slide active", character.Name)
@@ -127,6 +129,10 @@ local function endSlide(character)
   local original = savedWalkSpeed[character]
   if humanoid and original then
     humanoid.WalkSpeed = original
+  end
+  if humanoid then
+    humanoid.Sit = false
+    humanoid:ChangeState(Enum.HumanoidStateType.GettingUp)
   end
   savedWalkSpeed[character] = nil
 end

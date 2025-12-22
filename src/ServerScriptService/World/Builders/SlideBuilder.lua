@@ -27,7 +27,7 @@ function SlideBuilder.Build(playground, constants)
 
   local SLIDE_X = context.playgroundCenter.X - 30
   local SLIDE_Z = context.playgroundCenter.Z - 10
-  local PLATFORM_Y = GROUND_Y + 10
+  local PLATFORM_Y = GROUND_Y + 20
 
   local platform = BuilderUtil.findOrCreatePart(slideModel, constants.NAMES.SlidePlatform, "Part")
   local ramp = BuilderUtil.findOrCreatePart(slideModel, constants.NAMES.SlideRamp, "Part")
@@ -42,7 +42,7 @@ function SlideBuilder.Build(playground, constants)
   platform.Material = Enum.Material.SmoothPlastic
   platform.BrickColor = BrickColor.new("Bright blue")
 
-  local RAMP_LENGTH = 18
+  local RAMP_LENGTH = 36
   local RAMP_THICK = 1
   local heightDelta = (PLATFORM_Y + (platform.Size.Y / 2)) - (GROUND_Y + (RAMP_THICK / 2))
   local rampAngle = math.asin(math.clamp(heightDelta / RAMP_LENGTH, -1, 1))
@@ -74,7 +74,7 @@ function SlideBuilder.Build(playground, constants)
   local ladderWidth = 4
   local railThickness = 0.4
   local rungThickness = 0.3
-  local rungCount = 6
+  local rungCount = 10
   local ladderX = SLIDE_X - (platform.Size.X / 2) - 2
   local ladderZ = SLIDE_Z
 

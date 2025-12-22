@@ -1,5 +1,8 @@
 local CollectionService = game:GetService("CollectionService")
 
+local CityLayout = require(script.Parent.CityLayout)
+local LayoutUtil = require(script.Parent.LayoutUtil)
+
 local BuilderUtil = {}
 
 BuilderUtil.SAND_THICKNESS = 1
@@ -115,17 +118,21 @@ function BuilderUtil.getPlaygroundContext(constants)
     return nil
   end
 
-  local groundY = baseplate.Position.Y + (baseplate.Size.Y / 2)
-  local surfaceY = groundY + BuilderUtil.SAND_THICKNESS
-  local playgroundCenter = Vector3.new(homeSpawn.Position.X + 80, groundY, homeSpawn.Position.Z)
+  local groundY = LayoutUtil.getGroundY(baseplate)
+  local surfaceY = LayoutUtil.getSurfaceY(baseplate, BuilderUtil.SAND_THICKNESS)
+  local layout = CityLayout.getLayout(baseplate)
+  if not layout then
+    return nil
+  end
 
   return {
     baseplate = baseplate,
     homeSpawn = homeSpawn,
     groundY = groundY,
     surfaceY = surfaceY,
-    playgroundCenter = playgroundCenter,
+    playgroundCenter = layout.playgroundCenter,
     sandThickness = BuilderUtil.SAND_THICKNESS,
+    layout = layout,
   }
 end
 

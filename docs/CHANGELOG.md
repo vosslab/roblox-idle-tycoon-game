@@ -1,5 +1,66 @@
 # Changelog
 
+## 2025-12-22
+- Nudge the gas station again toward center to keep it away from the corner.
+- Nudge the gas station location again toward center to keep it away from the corner.
+- Move the gas station closer to center while keeping it clear of the school.
+- Move the gas station farther southwest to ensure clear distance from the school.
+- Push the gas station zone farther from the school for clear separation.
+- Move the gas station zone away from the corner while keeping it southwest of the city.
+- Move and rotate the gas station layout and offset cooler doors to prevent z-fighting.
+- Resize and reposition the gas station car, lift the forecourt to avoid z-fighting, and extend coolers.
+- Add a red car to the gas station lot.
+- Adjust gas station forecourt/canopy spacing to avoid overlap with the store.
+- Expand toolkit documentation and clean up unused builder locals.
+- Add `docs/CODE_ARCHITECTURE.md` describing world toolkits and layout modules.
+- Route baseplate ground/surface calculations through LayoutUtil in BuilderUtil.
+- Add a soda cooler to the gas station store and scale the store to 75% with single-story height.
+- Add a modular wall-opening system for doors/windows and return opening frames for placement.
+- Add WallBuilder to place walls with multiple openings and integrate it into RoomBuilder.
+- Scale gas station store doors and shelves to match the larger building.
+- Double the gas station store footprint while keeping the plot size unchanged.
+- Enlarge the gas station zone and store footprint, and add door lintels above store sliding doors.
+- Add RoomBuilder helpers for simple wall layouts with door openings.
+- Move and enlarge the gas station zone, rotate the layout, and reposition pumps/store.
+- Fix gas station sliding doors to align with wall openings and clean up old wall parts.
+- Double the slide height, ramp length, and ladder rungs.
+- Add LayoutUtil helper module for shared ground/surface/anchor placement logic.
+- Use CityLayout zone sizes for playground footprint and keep fence sizing local to the builder.
+- Anchor the spawn-to-playground path using CityLayout zone edges for cleaner spacing.
+- Restyle the Bloxsburg school facade with uniform six-pane windows and double entry doors.
+- Update the school sign text to "Bloxburg School".
+- Change the front sign to read "Bloxberg".
+- Make school door prompts instant and not require line of sight so doors reliably open.
+- Move the school outside the sand play area opposite the spawn platform and widen window spacing.
+- Shrink the sand area to 60% and position the school 40 studs beyond the spawn with tighter window gaps.
+- Split school doors and window builders into dedicated modules for clarity.
+- Move and rotate the school to face the spawn, widen the facade, and add rear windows.
+- Match the school to the diagram with a taller ceiling, gym layout, and side windows.
+- Add hallway side windows to match the diagram's left/right wall layout.
+- Rework classroom labels to sit beside doors, remove overlapping room floors, and open the center hallway.
+- Add door lintels, thicken door frames, widen the gym, and enlarge room/gym labels.
+- Convert front double doors to automatic sliding doors.
+- Remove the hallway center lintel and enlarge all school labels.
+- Add color accents with facade bands and corner columns.
+- Add a dedicated multi-pad spawn area and decouple school placement from spawn distance.
+- Enlarge classroom label text while shrinking label plates and sync gym doors to open together.
+- Add a centralized city layout module to space playground, school, and spawn consistently.
+- Rename the gym label and enlarge classroom label text.
+- Update city layout offsets to match `town_diagram.svg`.
+- Add placeholder centers for future shopping, gas station, and neighborhood zones.
+- Double city layout distances, centralize playground sizing in CityLayout, and lower fence height.
+- Set fixed city offsets (spawn at origin, playground 100 north, school 100 south, shopping west, neighborhood east, gas southwest).
+- Add basketball hoops to the east and west ends of the gym.
+- Add a basic gas station build at the southwest city zone.
+- Add a small gas station store with sliding doors and empty shelves.
+- Expand the gas station store and add sliding doors on north, south, and east sides.
+- Increase playground spacing and rebuild the path from spawn to the playground gate.
+- Add zone bounds helpers in CityLayout and shrink the playground footprint.
+- Lift spawn pads slightly above the platform and enlarge gas pumps to nearly reach the canopy.
+- Add consistent zone sizing and use zone bounds to start the path outside the spawn area.
+- Drive spawn platform size from CityLayout zone sizing.
+- Use HomeSpawn as a pad to avoid overlap and make the slide slower with seated sliding.
+
 ## 2025-12-20
 - Refactor server and client code into modular services with clear entry points.
 - Add shared constants for remotes, tags, and instance names.

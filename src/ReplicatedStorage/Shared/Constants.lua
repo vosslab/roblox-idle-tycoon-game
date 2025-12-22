@@ -12,6 +12,7 @@ local Constants = {
     QuestMount = "QuestMount",
     QuestButton = "QuestButton",
     SchoolDoor = "SchoolDoor",
+    SchoolSlidingDoor = "SchoolSlidingDoor",
   },
   NAMES = {
     Baseplate = "Baseplate",
@@ -37,6 +38,9 @@ local Constants = {
     HouseBase = "Base",
     CoinSpawners = "CoinSpawners",
     UpgradePad = "UpgradePad",
+    SpawnArea = "SpawnArea",
+    SpawnPlatform = "SpawnPlatform",
+    SpawnPad = "SpawnPad",
   },
   QUESTS = {
     Q1_PLAYGROUND = "Q1_PLAYGROUND",
