@@ -1,6 +1,17 @@
 # Changelog
 
 ## 2025-12-22
+- Restrict ContentId conversions to known property names to avoid mis-typing script Source.
+- Expand rbxmx sanitizing to detect ContentId by suffix and strip raw control chars.
+- Emit ContentId values as <Content><url>...</url></Content> to satisfy Rojo XML parsing.
+- Drop empty ContentId tags during rbxmx sanitizing to avoid Rojo parse errors.
+- Harden the rbxmx sanitizer to self-close empty Content tags and strip invalid entities.
+- Add `tools/rbxmx_sanitize.py` to convert AttributesSerialize and ContentId fields.
+- Move the sanitized A-Chassis XML to `assets/` and lift its spawn point above the pad.
+- Lift the A-Chassis spawn using its bounding box so it sits above ground.
+- Add a guard in `play_game.sh` to stop when `game.rbxl` is not generated.
+- Store the A-Chassis model as a binary .rbxm to avoid XML parse errors.
+- Place the A-Chassis model near the gas pumps during gas station build.
 - Add an A-Chassis rbxmx model export under `src/Workspace/Vehicles`.
 - Reduce cooler auto-open distance.
 - Make cooler doors swing open on a hinge (auto-close on distance).

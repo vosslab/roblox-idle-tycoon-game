@@ -75,6 +75,22 @@ local function buildCar(model, baseCFrame, localPos)
   end
 end
 
+local function placeAChassis(baseCFrame, localCFrame)
+  local vehicles = workspace:FindFirstChild("Vehicles")
+  local chassisModel = vehicles and vehicles:FindFirstChild("A-Chassis")
+  if not chassisModel then
+    chassisModel = workspace:FindFirstChild("A-Chassis")
+  end
+  if chassisModel and chassisModel:IsA("Model") then
+    local targetCFrame = baseCFrame * localCFrame
+    local bboxCFrame, bboxSize = chassisModel:GetBoundingBox()
+    local minY = bboxCFrame.Position.Y - (bboxSize.Y / 2)
+    local desiredY = targetCFrame.Position.Y + 1.5
+    local lift = desiredY - minY
+    chassisModel:PivotTo(targetCFrame + Vector3.new(0, lift, 0))
+  end
+end
+
 local function buildStore(model, baseCFrame, centerLocal, storeSize, baseHeight, constants)
   local wallThickness = 1
   local roofThickness = 1
@@ -396,6 +412,15 @@ function GasStationBuilder.Build(_playground, constants)
       baseTopLocal + asphaltOffset,
       forecourtCenter.Z - carOffsetZ
     )
+  )
+
+  placeAChassis(
+    baseCFrame,
+    CFrame.new(
+      canopyCenter.X,
+      baseTopLocal + asphaltOffset,
+      canopyCenter.Z + math.min(10, forecourtLength / 2 - 6)
+    ) * CFrame.Angles(0, math.rad(90), 0)
   )
 end
 
