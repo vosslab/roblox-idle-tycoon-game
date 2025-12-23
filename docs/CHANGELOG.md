@@ -21,6 +21,10 @@
 - Convert school/gas station doors and school windows to shared door/window builders.
 - Move remaining school door window/frame helpers into shared builders.
 - Tighten room corners, add A-frame roofs, expand house windows, and restructure the neighborhood grid.
+- Redesign house interiors for a larger 3BR layout with a front hallway and reworked bath/stairs.
+- Enlarge the house footprint and add a stair landing with a smaller upstairs hallway.
+- Add automated front doors to every neighborhood house.
+- Switch house interior doors to prompt-open.
 
 ## 2025-12-22
 - Park the A-Chassis on the baseplate near the spawn area and align its base to the ground.

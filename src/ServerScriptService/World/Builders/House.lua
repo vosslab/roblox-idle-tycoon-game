@@ -78,7 +78,7 @@ local function clearPartsByPrefix(model, prefix)
 end
 
 
-House.DEFAULT_SIZE = Vector3.new(48, DEFAULT_FLOOR_HEIGHT * 2, 38)
+House.DEFAULT_SIZE = Vector3.new(52, DEFAULT_FLOOR_HEIGHT * 2, 40)
 
 function House.new(config)
   config = config or {}
@@ -101,6 +101,7 @@ function House.new(config)
   self.hasInterior = config.hasInterior == true
   self.doorSide = normalizeDoorSide(config.doorSide)
   self.doorTag = config.doorTag
+  self.promptDoorTag = config.promptDoorTag
   self.autoDoorDistance = config.autoDoorDistance
   self.interiorDoorDistance = config.interiorDoorDistance
   return self
@@ -195,6 +196,17 @@ function House:Build(parent, baseCFrame)
   ridge.Material = Enum.Material.SmoothPlastic
   ridge.BrickColor = self.roofColor
   ridge.CFrame = houseCFrame * CFrame.new(0, ridgeY, 0)
+
+  local expectedRoof = {
+    RoofLeft = true,
+    RoofRight = true,
+    RoofRidge = true,
+  }
+  for _, child in ipairs(roofModel:GetChildren()) do
+    if child:IsA("BasePart") and not expectedRoof[child.Name] then
+      child:Destroy()
+    end
+  end
 
   local existingSecondFloor = houseModel:FindFirstChild("SecondFloor")
   if existingSecondFloor and existingSecondFloor:IsA("BasePart") then
@@ -336,17 +348,12 @@ function House:Build(parent, baseCFrame)
       bathDoor.CFrame = bathDoorFrame
       bathDoor.Material = Enum.Material.SmoothPlastic
       bathDoor.BrickColor = self.trimColor
-      DoorBuilder.enableAutoSlide(
-        bathDoor,
-        rightAxis,
-        INTERIOR_DOOR_WIDTH * 0.9,
-        -1,
-        self.interiorDoorDistance,
-        self.doorTag
-      )
+      local bathOpenCFrame =
+        DoorBuilder.getSlideOpenCFrame(bathDoor, rightAxis, INTERIOR_DOOR_WIDTH * 0.9, -1)
+      DoorBuilder.enablePromptDoor(bathDoor, bathOpenCFrame, nil, self.promptDoorTag)
     end
 
-    local hallDepth = math.max(12, math.min(depth * 0.35, 16))
+    local hallDepth = math.max(10, math.min(depth * 0.25, 12))
     local hallBackZ = frontEdge - hallDepth
 
     local bedroomWidth = width / 3
@@ -404,14 +411,9 @@ function House:Build(parent, baseCFrame)
         bedroomDoor.Material = Enum.Material.SmoothPlastic
         bedroomDoor.BrickColor = self.trimColor
         local slideSign = index % 2 == 0 and -1 or 1
-        DoorBuilder.enableAutoSlide(
-          bedroomDoor,
-          rightAxis,
-          INTERIOR_DOOR_WIDTH * 0.9,
-          slideSign,
-          self.interiorDoorDistance,
-          self.doorTag
-        )
+        local openCFrame =
+          DoorBuilder.getSlideOpenCFrame(bedroomDoor, rightAxis, INTERIOR_DOOR_WIDTH * 0.9, slideSign)
+        DoorBuilder.enablePromptDoor(bedroomDoor, openCFrame, nil, self.promptDoorTag)
       end
     end
 
@@ -442,19 +444,23 @@ function House:Build(parent, baseCFrame)
     end
 
     local stairModel = BuilderUtil.findOrCreateModel(houseModel, "Stairs")
-    local stepCount = 8
-    local stepHeight = floorHeight / stepCount
-    local stepDepth = 2.6
+    local lowerSteps = 5
+    local upperSteps = 5
+    local totalSteps = lowerSteps + upperSteps
+    local stepHeight = floorHeight / totalSteps
+    local stepDepth = 2.4
     local stepWidth = 6
-    local stairStartZ = frontEdge - 3
-    local stairCenterX = bathSideX + (stepWidth / 2) + 0.2
-    local maxStairX = halfWidth - (stepWidth / 2) - 0.2
+    local landingLength = 4
+    local landingThickness = 1
+    local stairStartZ = frontEdge - 2
+    local stairCenterX = bathSideX + (stepWidth / 2) + 0.5
+    local maxStairX = halfWidth - (stepWidth / 2) - 0.5
     if stairCenterX > maxStairX then
       stairCenterX = maxStairX
     end
 
     local stepSizeX, stepSizeZ = sizeForAxes(stepWidth, stepDepth, right)
-    for stepIndex = 1, stepCount do
+    for stepIndex = 1, lowerSteps do
       local step =
         BuilderUtil.findOrCreatePart(stairModel, "Step" .. string.format("%02d", stepIndex), "Part")
       BuilderUtil.applyPhysics(step, true, true, false)
@@ -467,7 +473,33 @@ function House:Build(parent, baseCFrame)
       step.BrickColor = BrickColor.new("Medium stone grey")
     end
 
-    local stepIndex = stepCount + 1
+    local landing = BuilderUtil.findOrCreatePart(stairModel, "Landing", "Part")
+    BuilderUtil.applyPhysics(landing, true, true, false)
+    landing.Size = Vector3.new(stepSizeX, landingThickness, landingLength)
+    local landingTopY = stepHeight * lowerSteps
+    local landingCenterY = landingTopY - (landingThickness / 2)
+    local landingCenterZ = stairStartZ - (stepDepth * (lowerSteps - 0.5)) - (landingLength / 2)
+    landing.CFrame = houseCFrame
+      * CFrame.new(layoutOffset(right, front, stairCenterX, landingCenterY, landingCenterZ))
+    landing.Material = Enum.Material.SmoothPlastic
+    landing.BrickColor = BrickColor.new("Medium stone grey")
+
+    local upperStartZ = landingCenterZ - (landingLength / 2) - (stepDepth / 2)
+    for stepIndex = 1, upperSteps do
+      local stepNumber = lowerSteps + stepIndex
+      local step =
+        BuilderUtil.findOrCreatePart(stairModel, "Step" .. string.format("%02d", stepNumber), "Part")
+      BuilderUtil.applyPhysics(step, true, true, false)
+      step.Size = Vector3.new(stepSizeX, stepHeight, stepSizeZ)
+      local stepY = landingTopY + (stepHeight / 2) + (stepHeight * (stepIndex - 1))
+      local stepZ = upperStartZ - (stepDepth * (stepIndex - 1))
+      local offset = layoutOffset(right, front, stairCenterX, stepY, stepZ)
+      step.CFrame = houseCFrame * CFrame.new(offset)
+      step.Material = Enum.Material.SmoothPlastic
+      step.BrickColor = BrickColor.new("Medium stone grey")
+    end
+
+    local stepIndex = totalSteps + 1
     while true do
       local extra = stairModel:FindFirstChild("Step" .. string.format("%02d", stepIndex))
       if not extra then
@@ -481,10 +513,17 @@ function House:Build(parent, baseCFrame)
       stepIndex += 1
     end
 
-    local openingPadding = 0.1
+    local extraLanding = stairModel:FindFirstChild("LandingExtra")
+    if extraLanding and extraLanding:IsA("BasePart") then
+      extraLanding:Destroy()
+    end
+
+    local openingPadding = 0.2
     local openingWidth = stepWidth + openingPadding
-    local openingLength = (stepDepth * stepCount) + openingPadding
-    local openingCenterZ = stairStartZ - ((stepDepth * (stepCount - 1)) / 2)
+    local openingFrontEdge = stairStartZ + (stepDepth / 2)
+    local openingBackEdge = upperStartZ - (stepDepth * (upperSteps - 1)) - (stepDepth / 2)
+    local openingLength = openingFrontEdge - openingBackEdge
+    local openingCenterZ = (openingFrontEdge + openingBackEdge) / 2
     local openingLeft = math.max(leftEdge, stairCenterX - (openingWidth / 2))
     local openingRight = math.min(halfWidth, stairCenterX + (openingWidth / 2))
     local openingFront = math.min(frontEdge, openingCenterZ + (openingLength / 2))

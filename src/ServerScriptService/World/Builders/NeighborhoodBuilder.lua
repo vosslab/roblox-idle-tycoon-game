@@ -33,6 +33,7 @@ function NeighborhoodBuilder.Build(playground, constants)
   local zoneWidth = zone and zone.width or 140
   local floorHeight = 10
   local doorTag = constants and constants.TAGS and constants.TAGS.AutoSwingDoor or nil
+  local promptDoorTag = constants and constants.TAGS and constants.TAGS.PromptDoor or nil
 
   local houseSize = House.DEFAULT_SIZE
   local cols = 4
@@ -158,10 +159,11 @@ function NeighborhoodBuilder.Build(playground, constants)
         offset = Vector3.new(colOffsetX, 0, rowOffsetZ),
         size = houseSize,
         floorHeight = floorHeight,
-        hasDoor = index == 1,
+        hasDoor = true,
         hasInterior = index == 1,
         doorSide = doorSide,
         doorTag = doorTag,
+        promptDoorTag = promptDoorTag,
         autoDoorDistance = 10,
         interiorDoorDistance = 7,
         wallColor = palette.wallColor,
