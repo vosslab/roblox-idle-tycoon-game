@@ -1,6 +1,7 @@
 # Changelog
 
 ## 2025-12-22
+- Move the sanitized A-Chassis XML out of `src/` and use the binary model for Rojo builds.
 - Restrict ContentId conversions to known property names to avoid mis-typing script Source.
 - Expand rbxmx sanitizing to detect ContentId by suffix and strip raw control chars.
 - Emit ContentId values as <Content><url>...</url></Content> to satisfy Rojo XML parsing.
