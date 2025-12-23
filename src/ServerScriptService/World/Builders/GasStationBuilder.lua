@@ -101,6 +101,7 @@ local function buildStore(model, baseCFrame, centerLocal, storeSize, baseHeight,
 
   local doorWidth = 5
   local doorHeight = 9
+  local doorDepth = math.max(0.2, wallThickness * 0.4)
   local doorGap = 0
   local doorSpan = (doorWidth * 2) + doorGap
   for _, child in ipairs(model:GetChildren()) do
@@ -114,8 +115,8 @@ local function buildStore(model, baseCFrame, centerLocal, storeSize, baseHeight,
     local doorRight = BuilderUtil.findOrCreatePart(model, namePrefix .. "Right", "Part")
     BuilderUtil.applyPhysics(doorLeft, true, true, false)
     BuilderUtil.applyPhysics(doorRight, true, true, false)
-    doorLeft.Size = Vector3.new(doorWidth, doorHeight, wallThickness)
-    doorRight.Size = Vector3.new(doorWidth, doorHeight, wallThickness)
+    doorLeft.Size = Vector3.new(doorWidth, doorHeight, doorDepth)
+    doorRight.Size = Vector3.new(doorWidth, doorHeight, doorDepth)
     doorLeft.Material = Enum.Material.Glass
     doorRight.Material = Enum.Material.Glass
     doorLeft.Transparency = 0.4
@@ -158,11 +159,7 @@ local function buildStore(model, baseCFrame, centerLocal, storeSize, baseHeight,
       and wallFrames.South[1].cframe
     or toWorldCFrame(
       baseCFrame,
-      Vector3.new(
-        centerLocal.X,
-        baseHeight + (doorHeight / 2),
-        centerLocal.Z - (storeSize.Z / 2)
-      )
+      Vector3.new(centerLocal.X, baseHeight + (doorHeight / 2), centerLocal.Z - (storeSize.Z / 2))
     )
   local doorCFrameNorth = wallFrames
       and wallFrames.North
@@ -170,11 +167,7 @@ local function buildStore(model, baseCFrame, centerLocal, storeSize, baseHeight,
       and wallFrames.North[1].cframe
     or toWorldCFrame(
       baseCFrame,
-      Vector3.new(
-        centerLocal.X,
-        baseHeight + (doorHeight / 2),
-        centerLocal.Z + (storeSize.Z / 2)
-      )
+      Vector3.new(centerLocal.X, baseHeight + (doorHeight / 2), centerLocal.Z + (storeSize.Z / 2))
     )
   local doorCFrameEast = wallFrames
       and wallFrames.East
@@ -182,11 +175,7 @@ local function buildStore(model, baseCFrame, centerLocal, storeSize, baseHeight,
       and wallFrames.East[1].cframe
     or toWorldCFrame(
       baseCFrame,
-      Vector3.new(
-        centerLocal.X + (storeSize.X / 2),
-        baseHeight + (doorHeight / 2),
-        centerLocal.Z
-      )
+      Vector3.new(centerLocal.X + (storeSize.X / 2), baseHeight + (doorHeight / 2), centerLocal.Z)
     )
   doorCFrameEast = doorCFrameEast * CFrame.Angles(0, math.rad(90), 0)
 
@@ -209,17 +198,14 @@ local function buildStore(model, baseCFrame, centerLocal, storeSize, baseHeight,
     shelf.BrickColor = BrickColor.new("Dark stone grey")
   end
 
-  local coolerSize = Vector3.new(4, 8, 2.5)
-  local coolerX = centerLocal.X
-    - (storeSize.X / 2)
-    + (coolerSize.X / 2)
-    + wallThickness
-    + 0.5
+  local coolerSize = Vector3.new(4.8, 8, 2.5)
+  local coolerX = centerLocal.X - (storeSize.X / 2) + (coolerSize.X / 2) + wallThickness + 0.2
   local coolerY = baseHeight + (coolerSize.Y / 2)
-  local usableZ = storeSize.Z - 4
-  local coolerSpacing = coolerSize.Z + 1
+  local coolerSpacing = coolerSize.Z
+  local usableZ = storeSize.Z - 2
   local coolerCount = math.max(1, math.floor(usableZ / coolerSpacing))
-  local startZ = centerLocal.Z - ((coolerCount - 1) * coolerSpacing / 2)
+  local totalCoolerSpan = coolerCount * coolerSpacing
+  local startZ = centerLocal.Z - (totalCoolerSpan / 2) + (coolerSpacing / 2)
 
   for index = 1, coolerCount do
     local coolerZ = startZ + ((index - 1) * coolerSpacing)
@@ -230,17 +216,26 @@ local function buildStore(model, baseCFrame, centerLocal, storeSize, baseHeight,
     cooler.Material = Enum.Material.SmoothPlastic
     cooler.BrickColor = BrickColor.new("Dark stone grey")
 
-    local coolerDoor =
-      BuilderUtil.findOrCreatePart(model, "SodaCoolerDoor" .. index, "Part")
+    local coolerDoor = BuilderUtil.findOrCreatePart(model, "SodaCoolerDoor" .. index, "Part")
     BuilderUtil.applyPhysics(coolerDoor, true, false, false)
     coolerDoor.Size = Vector3.new(0.15, coolerSize.Y - 0.5, coolerSize.Z - 0.4)
-    coolerDoor.CFrame = toWorldCFrame(
-      baseCFrame,
-      Vector3.new(coolerX + (coolerSize.X / 2) + 0.25, coolerY, coolerZ)
-    )
+    coolerDoor.CFrame =
+      toWorldCFrame(baseCFrame, Vector3.new(coolerX + (coolerSize.X / 2) + 0.25, coolerY, coolerZ))
     coolerDoor.Material = Enum.Material.Glass
     coolerDoor.Transparency = 0.4
     coolerDoor.BrickColor = BrickColor.new("Light blue")
+
+    local hingeOffsetZ = coolerDoor.Size.Z / 2
+    local openAngle = math.rad(-80)
+    local openCFrame = coolerDoor.CFrame
+      * CFrame.new(0, 0, -hingeOffsetZ)
+      * CFrame.Angles(0, openAngle, 0)
+      * CFrame.new(0, 0, hingeOffsetZ)
+    coolerDoor:SetAttribute("ClosedCFrame", coolerDoor.CFrame)
+    coolerDoor:SetAttribute("OpenCFrame", openCFrame)
+    coolerDoor:SetAttribute("IsOpen", false)
+    coolerDoor:SetAttribute("AutoDistance", 4)
+    BuilderUtil.applyTag(coolerDoor, constants.TAGS.AutoSwingDoor)
   end
 
   local extraIndex = coolerCount + 1
@@ -271,6 +266,8 @@ function GasStationBuilder.Build(_playground, constants)
   local padWidth = gasZone and gasZone.width or 60
   local padLength = gasZone and gasZone.length or 40
   local baseCFrame = CFrame.new(gasCenter) * CFrame.Angles(0, math.rad(180), 0)
+  local padHalfX = padWidth / 2
+  local padHalfZ = padLength / 2
 
   local model = BuilderUtil.findOrCreateModel(workspace, "GasStation")
 
@@ -280,28 +277,38 @@ function GasStationBuilder.Build(_playground, constants)
   base.CFrame = toWorldCFrame(baseCFrame, Vector3.new(0, base.Size.Y / 2, 0))
   stylePad(base, "Dark stone grey")
 
-  local baseTopLocal =
-    (LayoutUtil.getTopSurfaceY(base, 0) or (baseCFrame.Position.Y + base.Size.Y))
+  local baseTopLocal = (LayoutUtil.getTopSurfaceY(base, 0) or (baseCFrame.Position.Y + base.Size.Y))
     - baseCFrame.Position.Y
   local asphaltOffset = LayoutUtil.getLayerOffset("asphalt")
   local roomOffset = LayoutUtil.getLayerOffset("room_floor")
 
   local forecourt = BuilderUtil.findOrCreatePart(model, "Forecourt", "Part")
   BuilderUtil.applyPhysics(forecourt, true, true, false)
-  local forecourtLength = math.max(26, padLength - 58)
-  forecourt.Size = Vector3.new(padWidth - 16, 1, forecourtLength)
+  local storeMargin = 6
+  local storeSize = Vector3.new(72, 10, 48)
+  local forecourtWidth =
+    math.max(24, math.min(padWidth - 16, padWidth - storeSize.X - (storeMargin * 3)))
+  local forecourtLength =
+    math.max(26, math.min(padLength - 20, padLength - storeSize.Z - (storeMargin * 3)))
+  forecourt.Size = Vector3.new(forecourtWidth, 1, forecourtLength)
   local forecourtY = LayoutUtil.getStackedCenterY(base, forecourt.Size.Y, asphaltOffset)
   local forecourtLocalY = forecourtY and (forecourtY - baseCFrame.Position.Y)
     or (base.Size.Y + (forecourt.Size.Y / 2) + asphaltOffset)
-  local forecourtCenter = Vector3.new(-8, forecourtLocalY, -30)
+  local forecourtCenter = Vector3.new(
+    padHalfX - (forecourtWidth / 2) - storeMargin,
+    forecourtLocalY,
+    -(padHalfZ - (forecourtLength / 2) - storeMargin)
+  )
   forecourt.CFrame = toWorldCFrame(baseCFrame, forecourtCenter)
   stylePad(forecourt, "Medium stone grey")
 
   local canopy = BuilderUtil.findOrCreatePart(model, "Canopy", "Part")
   BuilderUtil.applyPhysics(canopy, true, true, false)
-  local canopyLength = math.max(18, forecourtLength - 12)
-  canopy.Size = Vector3.new(padWidth - 20, 1, canopyLength)
+  local canopyWidth = math.max(16, forecourtWidth - 8)
+  local canopyLength = math.max(14, forecourtLength - 8)
+  canopy.Size = Vector3.new(canopyWidth, 1, canopyLength)
   local canopyCenter = Vector3.new(-8, 12, forecourtCenter.Z)
+  canopyCenter = Vector3.new(forecourtCenter.X, canopyCenter.Y, forecourtCenter.Z)
   canopy.CFrame = toWorldCFrame(baseCFrame, canopyCenter)
   canopy.Material = Enum.Material.SmoothPlastic
   canopy.BrickColor = BrickColor.new("Linen")
@@ -342,33 +349,54 @@ function GasStationBuilder.Build(_playground, constants)
 
   local pumpHeight = 10
   local pumpY = (pumpHeight / 2) + 0.5
-  buildPump(model, "GasPumpA", baseCFrame, Vector3.new(-20, pumpY, canopyCenter.Z), pumpHeight)
-  buildPump(model, "GasPumpB", baseCFrame, Vector3.new(-8, pumpY, canopyCenter.Z), pumpHeight)
+  local pumpOffsetX = math.min(8, (canopyWidth / 2) - 4)
+  buildPump(
+    model,
+    "GasPumpA",
+    baseCFrame,
+    Vector3.new(canopyCenter.X - pumpOffsetX, pumpY, canopyCenter.Z),
+    pumpHeight
+  )
+  buildPump(
+    model,
+    "GasPumpB",
+    baseCFrame,
+    Vector3.new(canopyCenter.X + pumpOffsetX, pumpY, canopyCenter.Z),
+    pumpHeight
+  )
 
   local signPole = BuilderUtil.findOrCreatePart(model, "GasSignPole", "Part")
   BuilderUtil.applyPhysics(signPole, true, true, false)
   signPole.Size = Vector3.new(1, 14, 1)
-  signPole.CFrame = toWorldCFrame(baseCFrame, Vector3.new(-padWidth / 2 + 6, 7, padLength / 2 - 6))
+  signPole.CFrame = toWorldCFrame(baseCFrame, Vector3.new(-padHalfX + 6, 7, padHalfZ - 6))
   signPole.Material = Enum.Material.SmoothPlastic
   signPole.BrickColor = BrickColor.new("Dark stone grey")
 
   local sign = BuilderUtil.findOrCreatePart(model, "GasSign", "Part")
   BuilderUtil.applyPhysics(sign, true, false, false)
   sign.Size = Vector3.new(8, 4, 1)
-  sign.CFrame = toWorldCFrame(baseCFrame, Vector3.new(-padWidth / 2 + 6, 12, padLength / 2 - 6))
+  sign.CFrame = toWorldCFrame(baseCFrame, Vector3.new(-padHalfX + 6, 12, padHalfZ - 6))
   sign.Material = Enum.Material.SmoothPlastic
   sign.BrickColor = BrickColor.new("Bright orange")
 
-  local storeMargin = 6
-  local storeSize = Vector3.new(72, 27, 48)
   local storeCenter = Vector3.new(
-    (padWidth / 2) - (storeSize.X / 2) - storeMargin,
+    -(padHalfX - (storeSize.X / 2) - storeMargin),
     0,
-    (padLength / 2) - (storeSize.Z / 2) - storeMargin
+    padHalfZ - (storeSize.Z / 2) - storeMargin
   )
   buildStore(model, baseCFrame, storeCenter, storeSize, baseTopLocal + roomOffset, constants)
 
-  buildCar(model, baseCFrame, Vector3.new(10, baseTopLocal + asphaltOffset, canopyCenter.Z + 6))
+  local carOffsetX = forecourtWidth / 2 - 10
+  local carOffsetZ = forecourtLength / 2 - 8
+  buildCar(
+    model,
+    baseCFrame,
+    Vector3.new(
+      forecourtCenter.X - carOffsetX,
+      baseTopLocal + asphaltOffset,
+      forecourtCenter.Z - carOffsetZ
+    )
+  )
 end
 
 return GasStationBuilder

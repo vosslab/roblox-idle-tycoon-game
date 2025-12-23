@@ -13,6 +13,7 @@ local Constants = {
     QuestButton = "QuestButton",
     SchoolDoor = "SchoolDoor",
     SchoolSlidingDoor = "SchoolSlidingDoor",
+    AutoSwingDoor = "AutoSwingDoor",
   },
   NAMES = {
     Baseplate = "Baseplate",

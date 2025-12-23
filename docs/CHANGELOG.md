@@ -1,6 +1,12 @@
 # Changelog
 
 ## 2025-12-22
+- Add an A-Chassis rbxmx model export under `src/Workspace/Vehicles`.
+- Reduce cooler auto-open distance.
+- Make cooler doors swing open on a hinge (auto-close on distance).
+- Add auto swing cooler doors that open near players and close when they walk away.
+- Mirror the gas station store layout, lower the store height, and tighten cooler spacing.
+- Rebalance gas station layout using pad-relative spacing and thin sliding doors to tuck into walls.
 - Define shared height layers in LayoutUtil and use them in gas station stacking.
 - Add stacking helpers to LayoutUtil and use them to reduce floor overlap issues.
 - Offset gas station cooler doors to avoid z-fighting and keep car/store aligned to base height.

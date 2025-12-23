@@ -1,4 +1,5 @@
 # Compiled Lua sources
+rbxmk
 luac.out
 *.rbxl
 *.lock
