@@ -11,4 +11,6 @@ if ! command -v selene >/dev/null 2>&1; then
 fi
 
 cd "$REPO_ROOT"
-exec selene src
+CACHE_DIR="${REPO_ROOT}/.cache"
+mkdir -p "$CACHE_DIR"
+XDG_CACHE_HOME="$CACHE_DIR" exec selene src

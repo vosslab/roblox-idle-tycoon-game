@@ -1,4 +1,5 @@
 local BuilderUtil = require(script.Parent.BuilderUtil)
+local DoorBuilder = require(script.Parent.DoorBuilder)
 local LayoutUtil = require(script.Parent.LayoutUtil)
 local RoomBuilder = require(script.Parent.RoomBuilder)
 
@@ -142,14 +143,22 @@ local function buildStore(model, baseCFrame, centerLocal, storeSize, baseHeight,
     doorRight.CFrame = doorCFrame * CFrame.new((doorGap / 2) + (doorWidth / 2), 0, 0)
 
     local slideDistance = doorWidth * 0.9
-    doorLeft:SetAttribute("ClosedCFrame", doorLeft.CFrame)
-    doorRight:SetAttribute("ClosedCFrame", doorRight.CFrame)
-    doorLeft:SetAttribute("OpenCFrame", doorLeft.CFrame * CFrame.new(-slideDistance, 0, 0))
-    doorRight:SetAttribute("OpenCFrame", doorRight.CFrame * CFrame.new(slideDistance, 0, 0))
-    doorLeft:SetAttribute("IsOpen", false)
-    doorRight:SetAttribute("IsOpen", false)
-    BuilderUtil.applyTag(doorLeft, constants.TAGS.SchoolSlidingDoor)
-    BuilderUtil.applyTag(doorRight, constants.TAGS.SchoolSlidingDoor)
+    DoorBuilder.enableAutoSlide(
+      doorLeft,
+      "x",
+      slideDistance,
+      -1,
+      nil,
+      constants.TAGS.SchoolSlidingDoor
+    )
+    DoorBuilder.enableAutoSlide(
+      doorRight,
+      "x",
+      slideDistance,
+      1,
+      nil,
+      constants.TAGS.SchoolSlidingDoor
+    )
   end
 
   local wallFrames = RoomBuilder.buildWalls({
@@ -240,17 +249,16 @@ local function buildStore(model, baseCFrame, centerLocal, storeSize, baseHeight,
     coolerDoor.Transparency = 0.4
     coolerDoor.BrickColor = BrickColor.new("Light blue")
 
-    local hingeOffsetZ = coolerDoor.Size.Z / 2
-    local openAngle = math.rad(-80)
-    local openCFrame = coolerDoor.CFrame
-      * CFrame.new(0, 0, -hingeOffsetZ)
-      * CFrame.Angles(0, openAngle, 0)
-      * CFrame.new(0, 0, hingeOffsetZ)
-    coolerDoor:SetAttribute("ClosedCFrame", coolerDoor.CFrame)
-    coolerDoor:SetAttribute("OpenCFrame", openCFrame)
-    coolerDoor:SetAttribute("IsOpen", false)
-    coolerDoor:SetAttribute("AutoDistance", 4)
-    BuilderUtil.applyTag(coolerDoor, constants.TAGS.AutoSwingDoor)
+    DoorBuilder.enableAutoSwing(
+      coolerDoor,
+      "z",
+      coolerDoor.Size.Z,
+      "Left",
+      -1,
+      80,
+      4,
+      constants.TAGS.AutoSwingDoor
+    )
   end
 
   local extraIndex = coolerCount + 1

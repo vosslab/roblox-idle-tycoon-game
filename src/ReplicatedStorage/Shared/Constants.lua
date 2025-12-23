@@ -14,6 +14,7 @@ local Constants = {
     SchoolDoor = "SchoolDoor",
     SchoolSlidingDoor = "SchoolSlidingDoor",
     AutoSwingDoor = "AutoSwingDoor",
+    PromptDoor = "PromptDoor",
   },
   NAMES = {
     Baseplate = "Baseplate",
@@ -42,6 +43,7 @@ local Constants = {
     SpawnArea = "SpawnArea",
     SpawnPlatform = "SpawnPlatform",
     SpawnPad = "SpawnPad",
+    Neighborhood = "Neighborhood",
   },
   QUESTS = {
     Q1_PLAYGROUND = "Q1_PLAYGROUND",

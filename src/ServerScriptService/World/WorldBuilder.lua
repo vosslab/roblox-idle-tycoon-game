@@ -13,6 +13,7 @@ local MerryGoRoundBuilder = require(script.Parent.Builders.MerryGoRoundBuilder)
 local PathBuilder = require(script.Parent.Builders.PathBuilder)
 local SchoolBuilder = require(script.Parent.Builders.SchoolBuilder)
 local GasStationBuilder = require(script.Parent.Builders.GasStationBuilder)
+local NeighborhoodBuilder = require(script.Parent.Builders.NeighborhoodBuilder)
 
 local WorldBuilder = {}
 
@@ -68,6 +69,7 @@ function WorldBuilder.ensurePlayground(_baseplate, _homeSpawn)
   PathBuilder.Build(playground, Constants)
   SchoolBuilder.Build(playground, Constants)
   GasStationBuilder.Build(playground, Constants)
+  NeighborhoodBuilder.Build(playground, Constants)
 
   print("Playground rebuilt")
 end

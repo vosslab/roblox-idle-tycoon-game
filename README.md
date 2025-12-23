@@ -1,4 +1,4 @@
-# Roblox Idle Tycoon Game
+# roblox-rojo-game
 
 A kid‑friendly Roblox idle tycoon prototype with a simple quest loop, server‑authoritative economy, and a scripted playground built entirely from Parts.
 

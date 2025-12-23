@@ -1,129 +1,8 @@
 local BuilderUtil = require(script.Parent.BuilderUtil)
+local DoorBuilder = require(script.Parent.DoorBuilder)
+local WindowBuilder = require(script.Parent.WindowBuilder)
 
 local SchoolDoorsBuilder = {}
-
-local function ensureDoorPart(door, oldName, newName)
-  local part = door:FindFirstChild(newName)
-  if part and not part:IsA("BasePart") then
-    part.Name = newName .. "_Unexpected"
-    part = nil
-  end
-  if not part then
-    part = door:FindFirstChild(oldName)
-    if part and part:IsA("BasePart") then
-      part.Name = newName
-    else
-      if part then
-        part.Name = oldName .. "_Unexpected"
-      end
-      part = nil
-    end
-  end
-  if not part then
-    part = Instance.new("Part")
-    part.Name = newName
-    part.Parent = door
-  end
-  return part
-end
-
-local function ensureWeld(part, parent)
-  local weld = part:FindFirstChildOfClass("WeldConstraint")
-  if not weld then
-    weld = Instance.new("WeldConstraint")
-    weld.Parent = part
-  end
-  weld.Part0 = parent
-  weld.Part1 = part
-end
-
-local function buildSixPaneGlass(parent, namePrefix, size, offset, depth, style)
-  local glass = ensureDoorPart(parent, "Window", namePrefix .. "Glass")
-  BuilderUtil.applyPhysics(glass, false, false, true)
-  glass.Size = Vector3.new(size.X, size.Y, depth)
-  glass.Material = Enum.Material.Glass
-  glass.Transparency = style.glassTransparency
-  glass.BrickColor = style.glassColor
-  glass.CFrame = parent.CFrame * CFrame.new(offset)
-  ensureWeld(glass, parent)
-
-  local mullionThickness = math.min(size.X, size.Y) * 0.08
-
-  local mullionV = BuilderUtil.findOrCreatePart(parent, namePrefix .. "MullionV", "Part")
-  BuilderUtil.applyPhysics(mullionV, false, false, true)
-  mullionV.Size = Vector3.new(mullionThickness, size.Y, depth)
-  mullionV.Material = Enum.Material.SmoothPlastic
-  mullionV.BrickColor = style.frameColor
-  mullionV.CFrame = parent.CFrame * CFrame.new(offset)
-  ensureWeld(mullionV, parent)
-
-  local mullionH1 = BuilderUtil.findOrCreatePart(parent, namePrefix .. "MullionH1", "Part")
-  local mullionH2 = BuilderUtil.findOrCreatePart(parent, namePrefix .. "MullionH2", "Part")
-  BuilderUtil.applyPhysics(mullionH1, false, false, true)
-  BuilderUtil.applyPhysics(mullionH2, false, false, true)
-  mullionH1.Size = Vector3.new(size.X, mullionThickness, depth)
-  mullionH2.Size = Vector3.new(size.X, mullionThickness, depth)
-  mullionH1.Material = Enum.Material.SmoothPlastic
-  mullionH2.Material = Enum.Material.SmoothPlastic
-  mullionH1.BrickColor = style.frameColor
-  mullionH2.BrickColor = style.frameColor
-
-  local offsetY = size.Y / 6
-  mullionH1.CFrame = parent.CFrame * CFrame.new(offset + Vector3.new(0, offsetY, 0))
-  mullionH2.CFrame = parent.CFrame * CFrame.new(offset + Vector3.new(0, -offsetY, 0))
-  ensureWeld(mullionH1, parent)
-  ensureWeld(mullionH2, parent)
-end
-
-local function setCFrame(part, baseCFrame, localPosition)
-  part.CFrame = baseCFrame * CFrame.new(localPosition)
-end
-
-local function makeDoorFrame(
-  model,
-  namePrefix,
-  centerX,
-  centerZ,
-  doorWidth,
-  doorHeight,
-  style,
-  wallThickness,
-  baseCFrame
-)
-  local sideThickness = 0.4
-  local topThickness = 0.4
-  local frameDepth = wallThickness + 0.2
-
-  local left = BuilderUtil.findOrCreatePart(model, namePrefix .. "FrameLeft", "Part")
-  local right = BuilderUtil.findOrCreatePart(model, namePrefix .. "FrameRight", "Part")
-  local top = BuilderUtil.findOrCreatePart(model, namePrefix .. "FrameTop", "Part")
-  BuilderUtil.applyPhysics(left, true, true, false)
-  BuilderUtil.applyPhysics(right, true, true, false)
-  BuilderUtil.applyPhysics(top, true, true, false)
-
-  left.Size = Vector3.new(sideThickness, doorHeight, frameDepth)
-  right.Size = Vector3.new(sideThickness, doorHeight, frameDepth)
-  top.Size = Vector3.new(doorWidth + (sideThickness * 2), topThickness, frameDepth)
-
-  setCFrame(
-    left,
-    baseCFrame,
-    Vector3.new(centerX - (doorWidth / 2) - (sideThickness / 2), doorHeight / 2, centerZ)
-  )
-  setCFrame(
-    right,
-    baseCFrame,
-    Vector3.new(centerX + (doorWidth / 2) + (sideThickness / 2), doorHeight / 2, centerZ)
-  )
-  setCFrame(top, baseCFrame, Vector3.new(centerX, doorHeight + (topThickness / 2), centerZ))
-
-  left.Material = Enum.Material.SmoothPlastic
-  right.Material = Enum.Material.SmoothPlastic
-  top.Material = Enum.Material.SmoothPlastic
-  left.BrickColor = style.accentColor
-  right.BrickColor = style.accentColor
-  top.BrickColor = style.accentColor
-end
 
 local function makeDoor(
   model,
@@ -150,31 +29,25 @@ local function makeDoor(
 
   local windowSize = Vector3.new(doorWidth * 0.6, doorHeight * 0.45, wallThickness * 0.4)
   local windowOffset = Vector3.new(0, doorHeight * 0.1, 0)
-  buildSixPaneGlass(door, "DoorWindow", windowSize, windowOffset, windowSize.Z, style)
+  WindowBuilder.buildSixPaneInset(
+    door,
+    "DoorWindow",
+    windowSize,
+    windowOffset,
+    windowSize.Z,
+    style
+  )
 
   local openCFrame = nil
   if motion and motion.kind == "slide" then
     local slideDir = motion.slideDir or 1
     local slideDistance = motion.slideDistance or (doorWidth * 0.9)
-    openCFrame = door.CFrame * CFrame.new(slideDistance * slideDir, 0, 0)
+    openCFrame = DoorBuilder.getSlideOpenCFrame(door, "x", slideDistance, slideDir)
   else
-    local hingeOffsetX = hingeSide == "Right" and (doorWidth / 2) or (-doorWidth / 2)
-    local hingeOffset = Vector3.new(hingeOffsetX, 0, 0)
-    openCFrame = door.CFrame
-      * CFrame.new(hingeOffset)
-      * CFrame.Angles(0, math.rad(90 * (swingDir or 1)), 0)
-      * CFrame.new(-hingeOffset)
+    openCFrame = DoorBuilder.getHingeOpenCFrame(door, "x", doorWidth, hingeSide, swingDir, 90)
   end
 
-  door:SetAttribute("ClosedCFrame", door.CFrame)
-  door:SetAttribute("OpenCFrame", openCFrame)
-  door:SetAttribute("IsOpen", false)
-  if doorGroup then
-    door:SetAttribute("DoorGroup", doorGroup)
-  else
-    door:SetAttribute("DoorGroup", nil)
-  end
-  BuilderUtil.applyTag(door, doorTag)
+  DoorBuilder.setDoorFrames(door, openCFrame, doorGroup, doorTag, nil)
 end
 
 function SchoolDoorsBuilder.Build(schoolModel, config)
@@ -202,7 +75,7 @@ function SchoolDoorsBuilder.Build(schoolModel, config)
   local entrance = config.entrance
   if entrance then
     local entranceSpan = (entrance.doorWidth * 2) + entrance.gap
-    makeDoorFrame(
+    DoorBuilder.buildFrame(
       schoolModel,
       "Entrance",
       entrance.centerX,
@@ -250,7 +123,7 @@ function SchoolDoorsBuilder.Build(schoolModel, config)
   local gym = config.gym
   if gym then
     local gymSpan = (gym.doorWidth * 2) + gym.gap
-    makeDoorFrame(
+    DoorBuilder.buildFrame(
       schoolModel,
       "Gym",
       gym.centerX,
@@ -298,7 +171,7 @@ function SchoolDoorsBuilder.Build(schoolModel, config)
   local rooms = config.rooms
   if rooms and rooms.centers then
     for i, centerX in ipairs(rooms.centers) do
-      makeDoorFrame(
+      DoorBuilder.buildFrame(
         schoolModel,
         "Room" .. i,
         centerX,

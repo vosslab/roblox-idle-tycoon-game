@@ -6,6 +6,34 @@ local SchoolDoors = {}
 local constants = nil
 local doorBusy = {}
 
+local function getDoorTags()
+  local tags = {}
+  if constants and constants.TAGS then
+    if constants.TAGS.SchoolDoor then
+      table.insert(tags, constants.TAGS.SchoolDoor)
+    end
+    if constants.TAGS.PromptDoor then
+      table.insert(tags, constants.TAGS.PromptDoor)
+    end
+  end
+  return tags
+end
+
+local function getTaggedDoors()
+  local tags = getDoorTags()
+  local seen = {}
+  local doors = {}
+  for _, tag in ipairs(tags) do
+    for _, door in ipairs(CollectionService:GetTagged(tag)) do
+      if not seen[door] then
+        seen[door] = true
+        table.insert(doors, door)
+      end
+    end
+  end
+  return doors
+end
+
 local function getDoorCFrame(door, name)
   local value = door:GetAttribute(name)
   if typeof(value) == "CFrame" then
@@ -90,8 +118,8 @@ local function setupDoor(door)
     local group = getDoorGroup(door)
     local targets = { door }
 
-    if group and constants and constants.TAGS and constants.TAGS.SchoolDoor then
-      for _, otherDoor in ipairs(CollectionService:GetTagged(constants.TAGS.SchoolDoor)) do
+    if group then
+      for _, otherDoor in ipairs(getTaggedDoors()) do
         if otherDoor ~= door and getDoorGroup(otherDoor) == group then
           table.insert(targets, otherDoor)
         end
@@ -116,14 +144,15 @@ end
 
 function SchoolDoors.Init(constantsModule)
   constants = constantsModule
+  for _, tag in ipairs(getDoorTags()) do
+    for _, door in ipairs(CollectionService:GetTagged(tag)) do
+      setupDoor(door)
+    end
 
-  for _, door in ipairs(CollectionService:GetTagged(constants.TAGS.SchoolDoor)) do
-    setupDoor(door)
+    CollectionService:GetInstanceAddedSignal(tag):Connect(function(door)
+      setupDoor(door)
+    end)
   end
-
-  CollectionService:GetInstanceAddedSignal(constants.TAGS.SchoolDoor):Connect(function(door)
-    setupDoor(door)
-  end)
 end
 
 return SchoolDoors

@@ -1,5 +1,26 @@
 # Changelog
 
+## 2025-12-23
+- Update documentation to use repo name `roblox-rojo-game`.
+- Add a neighborhood builder with four simple houses.
+- Limit door openings to a single neighborhood house.
+- Make neighborhood houses two floors and larger.
+- Add interior rooms, hallway, and stairs for the house with the door.
+- Move the house stairs to a straight run near the entrance.
+- Align the house stairs against the wall between the main room and the bathroom.
+- Raise the school ceiling height.
+- Shift the neighborhood houses farther east to clear the school area.
+- Cut a stair opening in the second floor and keep upper walls above the floor slab.
+- Refactor houses into objects with door directions, footprints, and overlap checks.
+- Add a larger neighborhood grid and allow per-house floor height configuration.
+- Shrink the stairwell opening and add auto-opening house doors.
+- Add a shared door builder with prompt/auto behaviors and tighten the stairwell opening.
+- Run Selene with a repo-local cache folder.
+- Clear Selene warnings in the neighborhood builder.
+- Add a window builder and place street grid sections between houses.
+- Convert school/gas station doors and school windows to shared door/window builders.
+- Move remaining school door window/frame helpers into shared builders.
+
 ## 2025-12-22
 - Park the A-Chassis on the baseplate near the spawn area and align its base to the ground.
 - Move the sanitized A-Chassis XML out of `src/` and use the binary model for Rojo builds.

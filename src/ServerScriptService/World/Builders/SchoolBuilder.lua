@@ -51,7 +51,7 @@ function SchoolBuilder.Build(playground, constants)
     schoolLength = layout.zones.school.length or schoolLength
   end
   local floorSize = Vector3.new(schoolWidth, 1, schoolLength)
-  local wallHeight = 16
+  local wallHeight = 22
   local wallThickness = 1
   local roofThickness = 1
   local entranceDoorWidth = 5.5
